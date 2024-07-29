@@ -6,7 +6,19 @@ from league_score.services.exceptions import AdminUserExistsException
 class UserService():
     def __init__(self):
         self.db_wrapper = DataAccess()
+    def validate_user(self,user_name:str,password:str):
+        try:
+            user_object = self.lookup_user(user_name=user_name)[0]
+        except Exception as e:
+            # no user found, return None
+            return None
         
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'),user_object.password_salt)
+        if hashed_pw.decode('utf-8') == user_object.password:
+            return user_object
+        else:
+            return None
+    
     def lookup_user(self,id:int|None=None,user_name:str|None=None,user_level:UserLevel|None=None):
         with self.db_wrapper.connect() as conn:
             stmt = select(UserTable)
